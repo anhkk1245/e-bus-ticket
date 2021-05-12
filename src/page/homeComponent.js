@@ -1,6 +1,7 @@
 import { Form, Col, Row, Button } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchResult from "../component/searchResult"
+import UserService from "../services/user.service"
 
 function Home() {
   const initialState = {
@@ -8,6 +9,19 @@ function Home() {
     destination: "",
     date: "",
   };
+
+
+  const [provinceList, setProvinceList] = useState([]);
+
+  useEffect(()=>{
+    UserService.getProvincelist().then(res => {
+      let list = [];
+      res.data.map(el => list.push(el.name));
+      setProvinceList(list);
+      console.log(provinceList)
+    });
+
+  }, [])
 
   const [{ departure, destination, date }, setSearchData] = useState(
     initialState
@@ -18,6 +32,8 @@ function Home() {
     setSearchData((prevState) => ({ ...prevState, [id]: value }));
   };
 
+  const [searchResult, setSearchResult] = useState([])
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const searchData = {
@@ -26,6 +42,12 @@ function Home() {
       date: date,
     };
     console.log(searchData);
+    UserService.searchTrip(departure, destination, date).then(
+      data => {
+        console.log(data.data)
+        setSearchResult(data.data);
+      }
+    );
   };
 
   return (
@@ -42,7 +64,9 @@ function Home() {
                 as="select"
               >
                 <option>Choose...</option>
-                <option>...</option>
+                {
+                  provinceList.map(el => <option key = {el}> {el} </option>)
+                }
               </Form.Control>
             </Form.Group>
 
@@ -55,7 +79,9 @@ function Home() {
                 as="select"
               >
                 <option>Choose...</option>
-                <option>...</option>
+                {
+                  provinceList.map(el => <option key = {el}> {el} </option>)
+                }
               </Form.Control>
             </Form.Group>
 
@@ -77,7 +103,7 @@ function Home() {
 
       {/* if length > 0 */}
       <section className="search-result">
-            <SearchResult />
+            <SearchResult data = {searchResult}/>
       </section>
     </>
   );
